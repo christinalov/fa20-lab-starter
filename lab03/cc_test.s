@@ -1,5 +1,8 @@
+.globl simple_fn naive_pow inc_arr
+
 .data
 failure_message: .asciiz "Test failed for some reason.\n"
+success_message: .asciiz "Sanity checks passed! Make sure there are no CC violations.\n"
 array:
     .word 1 2 3 4 5
 exp_inc_array_result:
@@ -40,13 +43,17 @@ main:
     bne s0, t0, failure
     bne s1, t1, failure
     bne s11, t2, failure
-    # If none of those branches were hit, exit normally
+    # If none of those branches were hit, print a message and exit normally
+    li a0, 4
+    la a1, success_message
+    ecall
     li a0, 10
     ecall
 
 # Just a simple function. Returns 1.
-# FIXME Fix the reported errors in this function (you can delete lines
-# if necessary)
+#
+# FIXME Fix the reported error in this function (you can delete lines
+# if necessary, as long as the function still returns 1 in a0)
 simple_fn:
     mv a0, t0
     li a0, 1
@@ -91,7 +98,9 @@ naive_pow_end:
 # address as argument and increments the 32-bit value stored there.
 inc_arr:
     # BEGIN PROLOGUE
+    #
     # FIXME What other registers need to be saved?
+    #
     addi sp, sp, -4
     sw ra, 0(sp)
     # END PROLOGUE
@@ -103,8 +112,11 @@ inc_arr_loop:
     slli t1, t0, 2 # Convert array index to byte offset
     add a0, s0, t1 # Add offset to start of array
     # Prepare to call helper_fn
+    #
     # FIXME Add code to preserve the value in t0 before we call helper_fn
-    # Why don't we need to preserve t1?
+    # Hint: What does the "t" in "t0" stand for?
+    # Also ask yourself this: why don't we need to preserve t1?
+    #
     jal helper_fn
     # Finished call for helper_fn
     addi t0, t0, 1 # Increment counter
@@ -119,11 +131,19 @@ inc_arr_end:
 # This helper function adds 1 to the value at the memory address in a0.
 # It doesn't return anything.
 # C pseudocode for what it does: "*a0 = *a0 + 1"
-# This function doesn't violate calling convention, so don't worry.
+#
+# FIXME This function also violates calling convention, but it isn't
+# reported by the Venus CC checker because the function isn't exported
+# with the ".globl" keyword. You should fix the bug anyway by filling
+# in the prologue and epilogue as appropriate.
 helper_fn:
+    # BEGIN PROLOGUE
+    # END PROLOGUE
     lw t1, 0(a0)
-    addi t1, t1, 1
-    sw t1, 0(a0)
+    addi s0, t1, 1
+    sw s0, 0(a0)
+    # BEGIN PROLOGUE
+    # END PROLOGUE
     ret
 
 # YOU CAN IGNORE EVERYTHING BELOW THIS COMMENT
